@@ -1,0 +1,13 @@
+{
+  "name": "http-api-assignment",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "pretest": "eslint ./src --fix",
+    "test": "echo \"Tests complete\""
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
