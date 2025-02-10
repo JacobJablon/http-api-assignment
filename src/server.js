@@ -1,36 +1,37 @@
 const http = require('http');
+const url = require('url');
+const query = require('querystring');
 
-const { getIndex, getCSS } = require('./responses.js');
+const { getIndex, getCSS } = require('./htmlResponses.js');
+const { success, badRequest, unauthorized, forbidden, internal, notImplemented, notFound } = require('./dataResponses.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const urlStruct = {
     '/': getIndex,
     '/style.css': getCSS,
+    '/success': success,
+    '/badRequest': badRequest,
+    '/unauthorized': unauthorized,
+    '/forbidden': forbidden,
+    '/internal': internal,
+    '/notImplemented': notImplemented,
+    '/notFound': notFound,
+    notFound: notFound
 };
 
-
-// handle HTTP requests. In node the HTTP server will automatically
-// send this function request and pre-filled response objects.
 const onRequest = (request, response) => {
-    // parse the url using the built in URL class. Can make sure this supports http and https
-    const protocol = request.connection.encrypted ? 'https' : 'http';
-    const parsedUrl = new URL(request.url, `${protocol}://${request.headers.host}`);
+    const parsedUrl = url.parse(request.url);
+    const params = query.parse(parsedUrl.query);
 
-    // grab the 'accept' headers (comma delimited) and split them into an array
-    // store them inside of the request object for use in handler functions
-    request.acceptedTypes = request.headers.accept.split(',');
+    const acceptedTypes = request.headers.accept.split(',');
 
-    // check if the path name (the /name part of the url) matches
-    // any in our url object. If so call that function. If not, default to index.
     if (urlStruct[parsedUrl.pathname]) {
-        urlStruct[parsedUrl.pathname](request, response);
+        return urlStruct[parsedUrl.pathname](request, response, acceptedTypes, params);
     } else {
-        // otherwise send them to the index (normally this would be the 404 page)
-        urlStruct.index(request, response);
+        return urlStruct.notFound(request, response, acceptedTypes);
     }
 };
-
 
 http.createServer(onRequest).listen(port, () => {
     console.log(`Listening on 127.0.0.1: ${port}`);
